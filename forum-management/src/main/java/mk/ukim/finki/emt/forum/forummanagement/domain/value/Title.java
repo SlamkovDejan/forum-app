@@ -5,11 +5,15 @@ import mk.ukim.finki.emt.forum.sharedkernel.domain.base.ValueObject;
 import org.springframework.lang.NonNull;
 
 import javax.persistence.Embeddable;
+import javax.persistence.Transient;
 import java.util.Objects;
 
 @Getter
 @Embeddable
 public class Title implements ValueObject {
+
+    @Transient
+    private static final int MAX_CHARACTER_COUNT = 140;
 
     private final String title;
 
@@ -18,7 +22,10 @@ public class Title implements ValueObject {
     }
 
     public Title(@NonNull String title){
-        // TODO: Implement validity check
+        title = title.trim();
+        if(title.length() > MAX_CHARACTER_COUNT){
+            // TODO: throw new Exception();
+        }
         this.title = title;
     }
 

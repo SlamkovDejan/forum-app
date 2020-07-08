@@ -1,6 +1,7 @@
 package mk.ukim.finki.emt.forum.forummanagement.domain.model;
 
 import lombok.Getter;
+import mk.ukim.finki.emt.forum.forummanagement.domain.value.Description;
 import mk.ukim.finki.emt.forum.forummanagement.domain.value.ForumId;
 import mk.ukim.finki.emt.forum.forummanagement.domain.value.Title;
 import mk.ukim.finki.emt.forum.sharedkernel.domain.base.AbstractEntity;
@@ -17,8 +18,8 @@ public class Forum extends AbstractEntity<ForumId> {
     @AttributeOverride(name = "title", column = @Column(name = "title", nullable = false))
     private Title title;
 
-    @Column(name = "description", nullable = false)
-    private String description;
+    @Embedded
+    private Description description;
 
     @OneToMany(
             targetEntity = Discussion.class,
