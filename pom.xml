@@ -8,5 +8,9 @@
     <artifactId>forum-app</artifactId>
     <version>1.0-SNAPSHOT</version>
 
+    <modules>
+        <module>user-management</module>
+        <module>forum-management</module>
+    </modules>
 
 </project>
