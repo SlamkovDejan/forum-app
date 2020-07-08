@@ -24,19 +24,21 @@ public class Post extends AbstractEntity<PostId> {
     @AttributeOverride(name = "title", column = @Column(name = "subject", nullable = false))
     private Title subject;
 
-    @Column(name = "parent_id")
-    private PostId parentId;
+    @ManyToOne
+    @JoinColumn(name = "parent_id")
+    private Post parent;
 
     @OneToMany(
             targetEntity = Post.class,
-            mappedBy = "parentId",
+            mappedBy = "parent",
             fetch = FetchType.EAGER,
             cascade = CascadeType.ALL,
             orphanRemoval = true
     )
     private Set<Post> children;
 
-    @Column(name = "discussion_id", nullable = false)
-    private String discussionId;
+    @ManyToOne
+    @JoinColumn(name = "discussion_id")
+    private Discussion discussion;
 
 }

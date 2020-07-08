@@ -3,6 +3,7 @@ package mk.ukim.finki.emt.forum.forummanagement.domain.model;
 
 import lombok.Getter;
 import mk.ukim.finki.emt.forum.forummanagement.domain.value.DiscussionId;
+import mk.ukim.finki.emt.forum.forummanagement.domain.value.ForumId;
 import mk.ukim.finki.emt.forum.forummanagement.domain.value.LastPost;
 import mk.ukim.finki.emt.forum.forummanagement.domain.value.Title;
 import mk.ukim.finki.emt.forum.sharedkernel.domain.base.AbstractEntity;
@@ -10,6 +11,7 @@ import mk.ukim.finki.emt.forum.sharedkernel.domain.user.Username;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
+import java.util.Set;
 
 @Getter
 @Entity
@@ -35,6 +37,17 @@ public class Discussion extends AbstractEntity<DiscussionId> {
     @AttributeOverride(name = "title", column = @Column(name = "topic", nullable = false))
     private Title topic;
 
-    //TODO: Add relations
+    @ManyToOne
+    @JoinColumn(name = "forum_id")
+    private Forum forum;
+
+    @OneToMany(
+            targetEntity = Post.class,
+            mappedBy = "discussion",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true,
+            fetch = FetchType.EAGER
+    )
+    private Set<Post> posts;
 
 }

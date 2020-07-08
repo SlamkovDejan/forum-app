@@ -6,6 +6,7 @@ import mk.ukim.finki.emt.forum.forummanagement.domain.value.Title;
 import mk.ukim.finki.emt.forum.sharedkernel.domain.base.AbstractEntity;
 
 import javax.persistence.*;
+import java.util.Set;
 
 @Getter
 @Entity
@@ -19,5 +20,13 @@ public class Forum extends AbstractEntity<ForumId> {
     @Column(name = "description", nullable = false)
     private String description;
 
-    //TODO: Add relations
+    @OneToMany(
+            targetEntity = Discussion.class,
+            mappedBy = "forum",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true,
+            fetch = FetchType.EAGER
+    )
+    private Set<Discussion> discussions;
+
 }
