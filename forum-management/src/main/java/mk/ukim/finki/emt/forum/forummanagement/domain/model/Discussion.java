@@ -4,6 +4,7 @@ package mk.ukim.finki.emt.forum.forummanagement.domain.model;
 import lombok.Getter;
 import mk.ukim.finki.emt.forum.forummanagement.domain.value.DiscussionId;
 import mk.ukim.finki.emt.forum.forummanagement.domain.value.LastPost;
+import mk.ukim.finki.emt.forum.forummanagement.domain.value.Title;
 import mk.ukim.finki.emt.forum.sharedkernel.domain.base.AbstractEntity;
 import mk.ukim.finki.emt.forum.sharedkernel.domain.user.Username;
 
