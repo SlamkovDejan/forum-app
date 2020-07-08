@@ -1,20 +1,25 @@
 package mk.ukim.finki.emt.forum.sharedkernel.domain.base;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-
 import javax.persistence.EmbeddedId;
 import javax.persistence.MappedSuperclass;
+import javax.persistence.Version;
 import java.util.Objects;
 
 @MappedSuperclass
-@NoArgsConstructor
-@AllArgsConstructor
 public abstract class AbstractEntity<ID extends DomainObjectId> implements IdentifiableDomainObject<ID> {
 
     @EmbeddedId
     private ID id;
+
+    @Version
+    private Long version;
+
+    public AbstractEntity() {
+    }
+
+    public AbstractEntity(ID id){
+        this.id = id;
+    }
 
     @Override
     public ID id() {
@@ -33,4 +38,5 @@ public abstract class AbstractEntity<ID extends DomainObjectId> implements Ident
     public int hashCode() {
         return Objects.hash(id);
     }
+
 }
