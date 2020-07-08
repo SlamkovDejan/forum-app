@@ -4,10 +4,13 @@ import lombok.Getter;
 import mk.ukim.finki.emt.forum.forummanagement.domain.value.PostId;
 import mk.ukim.finki.emt.forum.forummanagement.domain.value.Title;
 import mk.ukim.finki.emt.forum.sharedkernel.domain.base.AbstractEntity;
+import org.springframework.lang.NonNull;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.Set;
+import java.util.TreeSet;
 
 @Getter
 @Entity
@@ -24,21 +27,30 @@ public class Post extends AbstractEntity<PostId> {
     @AttributeOverride(name = "title", column = @Column(name = "subject", nullable = false))
     private Title subject;
 
-    @ManyToOne
-    @JoinColumn(name = "parent_id")
-    private Post parent;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parent_post_id")
+    private Post parentPost;
 
     @OneToMany(
             targetEntity = Post.class,
-            mappedBy = "parent",
+            mappedBy = "parentPost",
             fetch = FetchType.EAGER,
             cascade = CascadeType.ALL,
             orphanRemoval = true
     )
-    private Set<Post> children;
+    private Set<Post> subPosts;
 
-    @ManyToOne
-    @JoinColumn(name = "discussion_id")
-    private Discussion discussion;
+    public Post() {
+        super();
+    }
+
+    public Post(@NonNull Title subject, @NonNull String content, Post parentPost){
+        super(new PostId());
+        this.subPosts = new TreeSet<>(Comparator.comparing(Post::getTimestampPosted));
+        this.timestampPosted = LocalDateTime.now();
+        this.subject = subject;
+        this.content = content; // TODO: make value object for content
+        this.parentPost = parentPost;
+    }
 
 }
