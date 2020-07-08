@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 
 import javax.persistence.EmbeddedId;
 import javax.persistence.MappedSuperclass;
+import javax.persistence.Version;
 import java.util.Objects;
 
 @MappedSuperclass
@@ -15,6 +16,9 @@ public abstract class AbstractEntity<ID extends DomainObjectId> implements Ident
 
     @EmbeddedId
     private ID id;
+
+    @Version
+    private Long version;
 
     @Override
     public ID id() {
