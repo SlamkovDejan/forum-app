@@ -7,9 +7,9 @@ import javax.persistence.Embeddable;
 
 @Embeddable
 @Getter
-public class DiscussionId extends DomainObjectId {
+public class ForumId extends DomainObjectId {
 
-    public DiscussionId() {
+    public ForumId(){
         super();
     }
 
