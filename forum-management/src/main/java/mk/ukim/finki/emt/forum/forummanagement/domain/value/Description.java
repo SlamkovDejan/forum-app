@@ -1,6 +1,7 @@
 package mk.ukim.finki.emt.forum.forummanagement.domain.value;
 
 import lombok.Getter;
+import mk.ukim.finki.emt.forum.forummanagement.domain.exception.DescriptionTooLongException;
 import mk.ukim.finki.emt.forum.sharedkernel.domain.base.ValueObject;
 import org.springframework.lang.NonNull;
 
@@ -24,7 +25,7 @@ public class Description implements ValueObject {
         description = description.trim();
         int wordCount = description.split("\\s+").length;
         if(wordCount > MAX_WORD_COUNT) {
-            // TODO: throw new Exception();
+            throw new DescriptionTooLongException(String.format("Description too long: %s!", description));
         }
         this.description = description;
     }

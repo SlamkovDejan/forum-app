@@ -1,6 +1,7 @@
 package mk.ukim.finki.emt.forum.forummanagement.domain.value;
 
 import lombok.Getter;
+import mk.ukim.finki.emt.forum.forummanagement.domain.exception.TitleTooLongException;
 import mk.ukim.finki.emt.forum.sharedkernel.domain.base.ValueObject;
 import org.springframework.lang.NonNull;
 
@@ -24,7 +25,7 @@ public class Title implements ValueObject {
     public Title(@NonNull String title){
         title = title.trim();
         if(title.length() > MAX_CHARACTER_COUNT){
-            // TODO: throw new Exception();
+            throw new TitleTooLongException(String.format("Title too long: %s!", title));
         }
         this.title = title;
     }
