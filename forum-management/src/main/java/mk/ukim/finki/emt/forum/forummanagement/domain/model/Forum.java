@@ -1,10 +1,8 @@
 package mk.ukim.finki.emt.forum.forummanagement.domain.model;
 
 import lombok.Getter;
-import mk.ukim.finki.emt.forum.forummanagement.domain.value.Description;
-import mk.ukim.finki.emt.forum.forummanagement.domain.value.DiscussionId;
-import mk.ukim.finki.emt.forum.forummanagement.domain.value.ForumId;
-import mk.ukim.finki.emt.forum.forummanagement.domain.value.Title;
+import mk.ukim.finki.emt.forum.forummanagement.domain.exception.DiscussionNotFoundException;
+import mk.ukim.finki.emt.forum.forummanagement.domain.value.*;
 import mk.ukim.finki.emt.forum.sharedkernel.domain.base.AbstractEntity;
 import mk.ukim.finki.emt.forum.sharedkernel.domain.user.Username;
 import org.springframework.lang.NonNull;
@@ -46,20 +44,20 @@ public class Forum extends AbstractEntity<ForumId> {
         return discussions.stream()
                 .filter(d->d.id().equals(discussionId))
                 .findFirst()
-                .orElseThrow(RuntimeException::new);
+                .orElseThrow(DiscussionNotFoundException::new);
     }
 
-    public Post createInitialPostForDiscussion(Title subject, String content){
+    public Post createInitialPostForDiscussion(Title subject, Content content){
         return new Post(subject, content, null);
     }
-    public Discussion openDiscussion(Username username, Post initialPost){
-        Discussion newDiscussion = new Discussion(username, initialPost, this);
-        discussions.add(newDiscussion);
+
+    public Discussion openDiscussion(Username startedBy, Post initialPost){
+        Discussion newDiscussion = new Discussion(startedBy, initialPost, this);
+        this.discussions.add(newDiscussion);
         return newDiscussion;
     }
 
-    public Post replyOnDiscussion(DiscussionId discussionId, String content, Post parentPost){
-        // TODO: explanation of discussion id
+    public Post replyOnDiscussion(DiscussionId discussionId, Content content, Post parentPost){
         Discussion discussion = this.findDiscussionById(discussionId);
 
         Title postTitle = new Title(String.format("Re: %s", discussion.getTopic().getTitle()));
