@@ -9,6 +9,7 @@ import mk.ukim.finki.emt.forum.sharedkernel.domain.base.AbstractEntity;
 import mk.ukim.finki.emt.forum.sharedkernel.domain.user.Username;
 import net.bytebuddy.dynamic.loading.ClassLoadingStrategy;
 import org.springframework.lang.NonNull;
+import org.springframework.lang.NonNull;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
@@ -57,6 +58,20 @@ public class Discussion extends AbstractEntity<DiscussionId> {
         this.timestampCreated = initialPost.getTimestampPosted();
         this.lastPostInfo = new LastPostInfo(startedBy, this.timestampCreated);
         this.numberOfPosts = 1;
+    }
+
+    void reply(Post parentPost, @NonNull Post newPost){
+        parentPost.addReply(newPost);
+    }
+
+    Post replies(){
+        /*
+            The posts in a discussion are structured like a tree.
+            Every node represents a post and every child of that node represents a reply to that post.
+            The children of one node are sorted in ascending order by time created (TreeSet).
+            The tree structure in the database is implemented with the recurrent relation in the Post entity.
+         */
+        return this.initialPost;
     }
 
 }

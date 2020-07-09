@@ -53,4 +53,8 @@ public class Post extends AbstractEntity<PostId> {
         this.parentPost = parentPost;
     }
 
+    void addReply(@NonNull Post post) {
+        subPosts.add(post);
+    }
+
 }
