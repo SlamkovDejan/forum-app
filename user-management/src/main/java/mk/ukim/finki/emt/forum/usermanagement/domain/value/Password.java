@@ -24,7 +24,6 @@ public class Password implements ValueObject {
         if(!password.matches(PASSWORD_REGEX)){
             throw new RuntimeException();
         }
-
         this.password = passwordEncoder.encode(password);
     }
 
@@ -40,4 +39,5 @@ public class Password implements ValueObject {
     public int hashCode() {
         return Objects.hash(password);
     }
+
 }

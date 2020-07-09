@@ -8,14 +8,17 @@ import java.util.Objects;
 import java.util.UUID;
 
 @Getter
-@Embeddable
 @MappedSuperclass
-public class DomainObjectId implements ValueObject {
+public abstract class DomainObjectId implements ValueObject {
 
     private final UUID id;
 
     public DomainObjectId() {
         this.id = UUID.randomUUID();
+    }
+
+    protected DomainObjectId(UUID id){
+        this.id = id;
     }
 
     @Override

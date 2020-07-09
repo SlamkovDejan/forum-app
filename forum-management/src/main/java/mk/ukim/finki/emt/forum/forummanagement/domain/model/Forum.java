@@ -41,14 +41,16 @@ public class Forum extends AbstractEntity<ForumId> {
     }
 
     private Discussion findDiscussionById(DiscussionId discussionId){
+        // all the discussions are already loaded into 'discussions' set because the fetch type is EAGER
+        // that's why we can search the set for the desired discussion and not query the database additionally for that discussion
         return discussions.stream()
                 .filter(d->d.id().equals(discussionId))
                 .findFirst()
                 .orElseThrow(DiscussionNotFoundException::new);
     }
 
-    public Post createInitialPostForDiscussion(Title subject, Content content){
-        return new Post(subject, content, null);
+    public Post createInitialPostForDiscussion(Title subject, Content content, UserId author){
+        return new Post(subject, content, null, author);
     }
 
     public Discussion openDiscussion(Username startedBy, Post initialPost){
@@ -57,11 +59,11 @@ public class Forum extends AbstractEntity<ForumId> {
         return newDiscussion;
     }
 
-    public Post replyOnDiscussion(DiscussionId discussionId, Content content, Post parentPost){
+    public Post replyOnDiscussion(DiscussionId discussionId, Content content, Post parentPost, UserId author){
         Discussion discussion = this.findDiscussionById(discussionId);
 
         Title postTitle = new Title(String.format("Re: %s", discussion.getTopic().getTitle()));
-        Post newPost = new Post(postTitle, content, parentPost);
+        Post newPost = new Post(postTitle, content, parentPost, author);
         discussion.reply(parentPost, newPost);
 
         return newPost;
@@ -78,10 +80,20 @@ public class Forum extends AbstractEntity<ForumId> {
             Every node represents a post and every child of that node represents a reply to that post.
             The children of one node are sorted in ascending order by time created (TreeSet).
             The tree structure in the database is implemented with the recurrent relation in the Post entity.
-            The returning of the root is sufficient for the
+            The returning of the root post of a discussion implies returning all associated posts for that discussion
          */
         Discussion discussion = this.findDiscussionById(discussionId);
         return discussion.replies();
+    }
+
+    public Subscription subscribeToDiscussion(DiscussionId discussionId, UserId subscriber){
+        Discussion discussion = this.findDiscussionById(discussionId);
+        return discussion.subscribe(subscriber);
+    }
+
+    public boolean unsubscribeToDiscussion(DiscussionId discussionId, Subscription subscription){
+        Discussion discussion = this.findDiscussionById(discussionId);
+        return discussion.unsubscribe(subscription);
     }
 
 }

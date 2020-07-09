@@ -12,4 +12,5 @@ public class RoleId extends DomainObjectId {
     public RoleId() {
         super();
     }
+
 }

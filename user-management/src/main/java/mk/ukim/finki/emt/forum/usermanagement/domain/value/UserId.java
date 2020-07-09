@@ -12,4 +12,5 @@ public class UserId extends DomainObjectId {
     public UserId() {
         super();
     }
+
 }

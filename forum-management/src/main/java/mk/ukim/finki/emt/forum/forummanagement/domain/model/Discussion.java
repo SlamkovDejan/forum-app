@@ -5,6 +5,7 @@ import lombok.Getter;
 import mk.ukim.finki.emt.forum.forummanagement.domain.value.DiscussionId;
 import mk.ukim.finki.emt.forum.forummanagement.domain.value.LastPostInfo;
 import mk.ukim.finki.emt.forum.forummanagement.domain.value.Title;
+import mk.ukim.finki.emt.forum.forummanagement.domain.value.UserId;
 import mk.ukim.finki.emt.forum.sharedkernel.domain.base.AbstractEntity;
 import mk.ukim.finki.emt.forum.sharedkernel.domain.user.Username;
 import net.bytebuddy.dynamic.loading.ClassLoadingStrategy;
@@ -13,6 +14,7 @@ import org.springframework.lang.NonNull;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.Set;
 
 @Getter
@@ -45,6 +47,15 @@ public class Discussion extends AbstractEntity<DiscussionId> {
     @JoinColumn(name = "initial_post_id", nullable = false)
     private Post initialPost;
 
+    @OneToMany(
+            targetEntity = Subscription.class,
+            mappedBy = "discussion",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true,
+            fetch = FetchType.LAZY
+    )
+    private Set<Subscription> subscriptions;
+
     public Discussion() {
         super();
     }
@@ -57,6 +68,7 @@ public class Discussion extends AbstractEntity<DiscussionId> {
         this.topic = initialPost.getSubject();
         this.timestampCreated = initialPost.getTimestampPosted();
         this.lastPostInfo = new LastPostInfo(startedBy, this.timestampCreated);
+        this.subscriptions = new HashSet<>();
         this.numberOfPosts = 1;
     }
 
@@ -70,8 +82,19 @@ public class Discussion extends AbstractEntity<DiscussionId> {
             Every node represents a post and every child of that node represents a reply to that post.
             The children of one node are sorted in ascending order by time created (TreeSet).
             The tree structure in the database is implemented with the recurrent relation in the Post entity.
+            The returning of the root post of a discussion implies returning all associated posts for that discussion
          */
         return this.initialPost;
+    }
+
+    Subscription subscribe(UserId subscriber){
+        Subscription newSubscription = new Subscription(this, subscriber);
+        this.subscriptions.add(newSubscription);
+        return newSubscription;
+    }
+
+    boolean unsubscribe(Subscription subscription){
+        return this.subscriptions.remove(subscription);
     }
 
 }

@@ -4,6 +4,7 @@ import lombok.Getter;
 import mk.ukim.finki.emt.forum.forummanagement.domain.value.Content;
 import mk.ukim.finki.emt.forum.forummanagement.domain.value.PostId;
 import mk.ukim.finki.emt.forum.forummanagement.domain.value.Title;
+import mk.ukim.finki.emt.forum.forummanagement.domain.value.UserId;
 import mk.ukim.finki.emt.forum.sharedkernel.domain.base.AbstractEntity;
 import org.springframework.lang.NonNull;
 
@@ -28,6 +29,10 @@ public class Post extends AbstractEntity<PostId> {
     @AttributeOverride(name = "title", column = @Column(name = "subject", nullable = false))
     private Title subject;
 
+    @Embedded
+    @AttributeOverride(name = "id", column = @Column(name = "author", nullable = false))
+    private UserId author;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_post_id")
     private Post parentPost;
@@ -45,13 +50,14 @@ public class Post extends AbstractEntity<PostId> {
         super();
     }
 
-    public Post(@NonNull Title subject, @NonNull Content content, Post parentPost){
+    public Post(@NonNull Title subject, @NonNull Content content, Post parentPost, UserId author){
         super(new PostId());
         this.subPosts = new TreeSet<>(Comparator.comparing(Post::getTimestampPosted));
         this.timestampPosted = LocalDateTime.now();
         this.subject = subject;
         this.content = content;
         this.parentPost = parentPost;
+        this.author = author;
     }
 
     void addReply(@NonNull Post post) {

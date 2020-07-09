@@ -18,9 +18,7 @@ public class Role extends AbstractEntity<RoleId> {
     @OneToMany(
             targetEntity = User.class,
             mappedBy = "role",
-            cascade = CascadeType.ALL,
-            orphanRemoval = true,
-            fetch = FetchType.LAZY //TODO: discuss
+            fetch = FetchType.LAZY
     )
     private Set<User> users;
 
