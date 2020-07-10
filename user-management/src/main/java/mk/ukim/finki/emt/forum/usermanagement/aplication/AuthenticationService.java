@@ -1,8 +1,8 @@
 package mk.ukim.finki.emt.forum.usermanagement.aplication;
 
 import mk.ukim.finki.emt.forum.sharedkernel.domain.user.Username;
-import mk.ukim.finki.emt.forum.usermanagement.aplication.dto.LoginDto;
-import mk.ukim.finki.emt.forum.usermanagement.aplication.dto.UserDto;
+import mk.ukim.finki.emt.forum.usermanagement.aplication.form.LoginForm;
+import mk.ukim.finki.emt.forum.usermanagement.aplication.form.UserForm;
 import mk.ukim.finki.emt.forum.usermanagement.domain.exception.PasswordException;
 import mk.ukim.finki.emt.forum.usermanagement.domain.exception.RoleNotFoundException;
 import mk.ukim.finki.emt.forum.usermanagement.domain.exception.UserNotFoundException;
@@ -20,8 +20,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.UUID;
-
 @Service
 @Transactional
 public class AuthenticationService {
@@ -36,12 +34,12 @@ public class AuthenticationService {
         this.passwordEncoder = passwordEncoder;
     }
 
-    public User login(@NonNull LoginDto loginDto){
-        User user = userRepository.findUserByUsername(new Username(loginDto.getUsernameOrEmail()))
-                .orElse(userRepository.findUserByEmail(new Email(loginDto.getUsernameOrEmail())).orElseThrow(UserNotFoundException::new));
+    public User login(@NonNull LoginForm loginForm){
+        User user = userRepository.findUserByUsername(new Username(loginForm.getUsernameOrEmail()))
+                .orElse(userRepository.findUserByEmail(new Email(loginForm.getUsernameOrEmail())).orElseThrow(UserNotFoundException::new));
 
 
-        EncodedPassword password = new EncodedPassword(passwordEncoder.encode(loginDto.getPassword()));
+        EncodedPassword password = new EncodedPassword(passwordEncoder.encode(loginForm.getPassword()));
         if(!user.login(password)) {
             throw new PasswordException("Wrong password");
         }
@@ -49,15 +47,15 @@ public class AuthenticationService {
         return user;
     }
 
-    public User register(@NonNull UserDto userDto){
-        FullName fullName = new FullName(userDto.getFirstName(), userDto.getLastName());
-        Username username = new Username(userDto.getUsername());
-        Email email = new Email(userDto.getEmail());
-        if(!EncodedPassword.validatePassword(userDto.getPassword())){
+    public User register(@NonNull UserForm userForm){
+        FullName fullName = new FullName(userForm.getFirstName(), userForm.getLastName());
+        Username username = new Username(userForm.getUsername());
+        Email email = new Email(userForm.getEmail());
+        if(!EncodedPassword.validatePassword(userForm.getPassword())){
             throw new PasswordException("Invalid password");
         }
-        EncodedPassword password = new EncodedPassword(passwordEncoder.encode(userDto.getPassword()));
-        Role role = roleRepository.findById(new RoleId(userDto.getRoleId())).orElseThrow(RoleNotFoundException::new);
+        EncodedPassword password = new EncodedPassword(passwordEncoder.encode(userForm.getPassword()));
+        Role role = roleRepository.findById(new RoleId(userForm.getRoleId())).orElseThrow(RoleNotFoundException::new);
         User user = User.signUp(fullName, username, email, password, role);
 
         userRepository.save(user);

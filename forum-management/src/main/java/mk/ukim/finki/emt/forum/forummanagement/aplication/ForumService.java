@@ -1,8 +1,8 @@
 package mk.ukim.finki.emt.forum.forummanagement.aplication;
 
-import mk.ukim.finki.emt.forum.forummanagement.aplication.dto.DiscussionDTO;
-import mk.ukim.finki.emt.forum.forummanagement.aplication.dto.ForumDTO;
-import mk.ukim.finki.emt.forum.forummanagement.aplication.dto.PostReplyDTO;
+import mk.ukim.finki.emt.forum.forummanagement.aplication.form.DiscussionForm;
+import mk.ukim.finki.emt.forum.forummanagement.aplication.form.ForumForm;
+import mk.ukim.finki.emt.forum.forummanagement.aplication.form.PostReplyForm;
 import mk.ukim.finki.emt.forum.forummanagement.aplication.dto.SubscribeDTO;
 import mk.ukim.finki.emt.forum.forummanagement.domain.model.Discussion;
 import mk.ukim.finki.emt.forum.forummanagement.domain.model.Forum;
@@ -65,29 +65,29 @@ public class ForumService {
         }
     }
 
-    public Forum createForum(@NonNull ForumDTO forumDTO){
-        Title forumTitle = new Title(forumDTO.getTitle());
-        Description forumDescription = new Description(forumDTO.getDescription());
-        boolean autoSubscribeStudents = forumDTO.isAutoSubscribeStudents();
-        boolean canStudentsReply = forumDTO.isCanStudentsReply();
+    public Forum createForum(@NonNull ForumForm forumForm){
+        Title forumTitle = new Title(forumForm.getTitle());
+        Description forumDescription = new Description(forumForm.getDescription());
+        boolean autoSubscribeStudents = forumForm.isAutoSubscribeStudents();
+        boolean canStudentsReply = forumForm.isCanStudentsReply();
 
         Forum newForum = new Forum(forumTitle, forumDescription, autoSubscribeStudents, canStudentsReply);
         return forumRepository.saveAndFlush(newForum);
     }
 
-    public Discussion openNewDiscussionOnForum(DiscussionDTO discussionDTO){
+    public Discussion openNewDiscussionOnForum(DiscussionForm discussionForm){
         // TODO: custom exception
-        Forum forum = this.forumRepository.findById(new ForumId(discussionDTO.getForumId()))
+        Forum forum = this.forumRepository.findById(new ForumId(discussionForm.getForumId()))
                 .orElseThrow(RuntimeException::new);
 
-        Title initialPostSubject = new Title(discussionDTO.getInitialPost().getSubject());
-        Content initialPostContent = new Content(discussionDTO.getInitialPost().getContent());
-        UserId initialPostAuthor = new UserId(discussionDTO.getInitialPost().getAuthorId());
+        Title initialPostSubject = new Title(discussionForm.getInitialPost().getSubject());
+        Content initialPostContent = new Content(discussionForm.getInitialPost().getContent());
+        UserId initialPostAuthor = new UserId(discussionForm.getInitialPost().getAuthorId());
         Post initialPostOnDiscussion = forum.createInitialPostForDiscussion(initialPostSubject, initialPostContent,initialPostAuthor);
         this.postRepository.saveAndFlush(initialPostOnDiscussion);
         // TODO: fire event ?
 
-        Username startedBy = new Username(discussionDTO.getStartedByUsername());
+        Username startedBy = new Username(discussionForm.getStartedByUsername());
 
         Discussion newDiscussion = forum.openDiscussion(startedBy, initialPostOnDiscussion);
         this.discussionRepository.saveAndFlush(newDiscussion);
@@ -104,17 +104,17 @@ public class ForumService {
         return newDiscussion;
     }
 
-    public Post replyOnForumDiscussion(PostReplyDTO postReplyDTO){
+    public Post replyOnForumDiscussion(PostReplyForm postReplyForm){
         // TODO: custom exception
-        Forum forum = this.forumRepository.findById(new ForumId(postReplyDTO.getForumId()))
+        Forum forum = this.forumRepository.findById(new ForumId(postReplyForm.getForumId()))
                 .orElseThrow(RuntimeException::new);
 
-        DiscussionId discussionId = new DiscussionId(postReplyDTO.getDiscussionId());
-        Content postContent = new Content(postReplyDTO.getContent());
+        DiscussionId discussionId = new DiscussionId(postReplyForm.getDiscussionId());
+        Content postContent = new Content(postReplyForm.getContent());
         // TODO: custom exception
-        Post parentPost = this.postRepository.findById(new PostId(postReplyDTO.getParentPostId()))
+        Post parentPost = this.postRepository.findById(new PostId(postReplyForm.getParentPostId()))
                 .orElseThrow(RuntimeException::new);
-        UserId author = new UserId(postReplyDTO.getAuthorId());
+        UserId author = new UserId(postReplyForm.getAuthorId());
 
         // auto subscribe the author of the post to the discussion (if not already subscribed)
         this.autoSubscribe(forum, discussionId, author);

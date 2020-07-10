@@ -1,16 +1,21 @@
 package mk.ukim.finki.emt.forum.forummanagement.aplication.dto;
 
-import lombok.Getter;
+import javax.validation.constraints.NotNull;
+
+import lombok.Data;
 
 import java.util.UUID;
 
-@Getter
+@Data
 public class SubscribeDTO {
 
+    @NotNull
     private UUID forumId;
 
+    @NotNull
     private UUID discussionId;
 
+    @NotNull
     private UUID subscriberId;
 
 }

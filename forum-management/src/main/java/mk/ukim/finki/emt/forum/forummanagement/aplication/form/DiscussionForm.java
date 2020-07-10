@@ -1,25 +1,32 @@
-package mk.ukim.finki.emt.forum.forummanagement.aplication.dto;
+package mk.ukim.finki.emt.forum.forummanagement.aplication.form;
 
-import lombok.Getter;
+import lombok.Data;
 
+import javax.validation.constraints.NotNull;
 import java.util.UUID;
 
-@Getter
-public class DiscussionDTO {
+@Data
+public class DiscussionForm {
 
+    @NotNull
     private UUID forumId;
 
+    @NotNull
     private String startedByUsername;
 
+    @NotNull
     private InitialPostDTO initialPost;
 
-    @Getter
+    @Data
     public static class InitialPostDTO{
 
+        @NotNull
         private String subject;
 
+        @NotNull
         private String content;
 
+        @NotNull
         private UUID authorId;
 
     }

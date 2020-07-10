@@ -1,15 +1,13 @@
-package mk.ukim.finki.emt.forum.usermanagement.aplication.dto;
+package mk.ukim.finki.emt.forum.usermanagement.aplication.form;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.util.UUID;
 
-@Getter
-@Setter
-public class UserDto implements Serializable {
+@Data
+public class UserForm implements Serializable {
 
     @NotNull
     private String firstName;
