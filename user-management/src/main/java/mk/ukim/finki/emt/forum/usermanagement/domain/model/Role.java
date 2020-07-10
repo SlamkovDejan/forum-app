@@ -2,6 +2,7 @@ package mk.ukim.finki.emt.forum.usermanagement.domain.model;
 
 import lombok.Getter;
 import mk.ukim.finki.emt.forum.sharedkernel.domain.base.AbstractEntity;
+import mk.ukim.finki.emt.forum.sharedkernel.domain.role.RoleName;
 import mk.ukim.finki.emt.forum.usermanagement.domain.value.RoleId;
 
 import javax.persistence.*;

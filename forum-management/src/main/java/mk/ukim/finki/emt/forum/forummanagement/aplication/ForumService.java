@@ -13,6 +13,7 @@ import mk.ukim.finki.emt.forum.forummanagement.domain.repository.ForumRepository
 import mk.ukim.finki.emt.forum.forummanagement.domain.repository.PostRepository;
 import mk.ukim.finki.emt.forum.forummanagement.domain.repository.SubscriptionRepository;
 import mk.ukim.finki.emt.forum.forummanagement.domain.value.*;
+import mk.ukim.finki.emt.forum.sharedkernel.domain.role.RoleName;
 import mk.ukim.finki.emt.forum.sharedkernel.domain.user.Username;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
@@ -30,15 +31,21 @@ public class ForumService {
     private final PostRepository postRepository;
     private final DiscussionRepository discussionRepository;
     private final SubscriptionRepository subscriptionRepository;
+    private final UserService userService;
+    private final RoleService roleService;
 
     public ForumService(ForumRepository forumRepository,
                         PostRepository postRepository,
                         DiscussionRepository discussionRepository,
-                        SubscriptionRepository subscriptionRepository) {
+                        SubscriptionRepository subscriptionRepository,
+                        UserService userService,
+                        RoleService roleService) {
         this.forumRepository = forumRepository;
         this.postRepository = postRepository;
         this.discussionRepository = discussionRepository;
         this.subscriptionRepository = subscriptionRepository;
+        this.userService = userService;
+        this.roleService = roleService;
     }
 
     //TODO: change who can create discussion
@@ -49,9 +56,14 @@ public class ForumService {
         return forum.subscribeToDiscussion(discussion, subscriber);
     }
 
-    // TODO: discuss method names: suffix Forum
-    // TODO: discuss flush
-    // TODO: auto subscribe students to every new discussions
+    private void autoSubscribe(Forum forum, DiscussionId discussionId, UserId subscriber){
+        Optional<Subscription> subscription = this.subscriptionRepository.findFirstByDiscussion_IdAndSubscriber(discussionId, subscriber);
+        boolean isSubscribed = subscription.isPresent();
+        if(!isSubscribed){
+            Subscription newSubscription = this.createSubscriptionOnForumDiscussion(forum, discussionId.getId(), subscriber.getId());
+            this.subscriptionRepository.saveAndFlush(newSubscription);
+        }
+    }
 
     public Forum createForum(@NonNull ForumDTO forumDTO){
         Title forumTitle = new Title(forumDTO.getTitle());
@@ -60,7 +72,7 @@ public class ForumService {
         boolean canStudentsReply = forumDTO.isCanStudentsReply();
 
         Forum newForum = new Forum(forumTitle, forumDescription, autoSubscribeStudents, canStudentsReply);
-        return forumRepository.save(newForum);
+        return forumRepository.saveAndFlush(newForum);
     }
 
     public Discussion openNewDiscussionOnForum(DiscussionDTO discussionDTO){
@@ -72,18 +84,23 @@ public class ForumService {
         Content initialPostContent = new Content(discussionDTO.getInitialPost().getContent());
         UserId initialPostAuthor = new UserId(discussionDTO.getInitialPost().getAuthorId());
         Post initialPostOnDiscussion = forum.createInitialPostForDiscussion(initialPostSubject, initialPostContent,initialPostAuthor);
-        this.postRepository.save(initialPostOnDiscussion);
+        this.postRepository.saveAndFlush(initialPostOnDiscussion);
         // TODO: fire event ?
 
         Username startedBy = new Username(discussionDTO.getStartedByUsername());
 
         Discussion newDiscussion = forum.openDiscussion(startedBy, initialPostOnDiscussion);
-        this.discussionRepository.save(newDiscussion);
+        this.discussionRepository.saveAndFlush(newDiscussion);
 
-        // auto subscribe the starter of the discussion
+        // auto subscribe the starter of the discussion (he's not subscribed because it's the first post of the discussion)
         Subscription newSubscription = this.createSubscriptionOnForumDiscussion(forum, newDiscussion.id().getId(), initialPostAuthor.getId());
-        this.subscriptionRepository.save(newSubscription);
+        this.subscriptionRepository.saveAndFlush(newSubscription);
 
+        // auto subscribe other students
+        if(forum.autoSubscribe()){
+            UUID roleId = this.roleService.findRoleIdByRoleName(RoleName.STUDENT);
+            this.userService.findAllUserIdsByRoleId(roleId).forEach((userId) -> this.autoSubscribe(forum, newDiscussion.id(), userId));
+        }
         return newDiscussion;
     }
 
@@ -100,16 +117,11 @@ public class ForumService {
         UserId author = new UserId(postReplyDTO.getAuthorId());
 
         // auto subscribe the author of the post to the discussion (if not already subscribed)
-        Optional<Subscription> subscription = this.subscriptionRepository.findFirstByDiscussion_IdAndSubscriber(discussionId, author);
-        boolean isSubscribed = subscription.isPresent();
-        if(!isSubscribed){
-            Subscription newSubscription = this.createSubscriptionOnForumDiscussion(forum, discussionId.getId(), author.getId());
-            this.subscriptionRepository.save(newSubscription);
-        }
+        this.autoSubscribe(forum, discussionId, author);
 
         // TODO: fire event
         Post newPostReply = forum.replyOnDiscussion(discussionId, postContent, parentPost, author);
-        return this.postRepository.save(newPostReply);
+        return this.postRepository.saveAndFlush(newPostReply);
     }
 
     public Set<Discussion> allDiscussionsOnForum(UUID forumId){
@@ -119,7 +131,6 @@ public class ForumService {
         return forum.allDiscussions();
     }
 
-    // TODO: naming here
     public Post getDiscussionOnForum(UUID forumId, UUID discussionId){
         // TODO: custom exception
         Forum forum = this.forumRepository.findById(new ForumId(forumId))
@@ -133,10 +144,9 @@ public class ForumService {
                 .orElseThrow(RuntimeException::new);
 
         Subscription newSubscription = createSubscriptionOnForumDiscussion(forum, subscribeDTO.getDiscussionId(), subscribeDTO.getSubscriberId());
-        return this.subscriptionRepository.save(newSubscription);
+        return this.subscriptionRepository.saveAndFlush(newSubscription);
     }
-
-    // TODO: the name of the DTO; they hold same things
+    
     public boolean UnsubscribeFromForumDiscussion(SubscribeDTO subscribeDTO){
         // TODO: custom exception
         Forum forum = this.forumRepository.findById(new ForumId(subscribeDTO.getForumId()))

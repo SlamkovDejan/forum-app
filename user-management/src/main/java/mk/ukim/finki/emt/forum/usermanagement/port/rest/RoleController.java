@@ -1,7 +1,7 @@
 package mk.ukim.finki.emt.forum.usermanagement.port.rest;
 
 import mk.ukim.finki.emt.forum.usermanagement.domain.model.Role;
-import mk.ukim.finki.emt.forum.usermanagement.domain.model.RoleName;
+import mk.ukim.finki.emt.forum.sharedkernel.domain.role.RoleName;
 import mk.ukim.finki.emt.forum.usermanagement.domain.repository.RoleRepository;
 import mk.ukim.finki.emt.forum.usermanagement.domain.value.RoleId;
 import org.springframework.http.ResponseEntity;

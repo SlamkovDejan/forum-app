@@ -104,4 +104,12 @@ public class Forum extends AbstractEntity<ForumId> {
         return discussion.unsubscribe(subscription);
     }
 
+    public boolean autoSubscribe(){
+        return this.autoSubscribeStudents;
+    }
+
+    public boolean canStudentsReply(){
+        return this.canStudentsReply;
+    }
+
 }

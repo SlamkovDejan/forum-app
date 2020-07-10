@@ -1,6 +1,7 @@
 package mk.ukim.finki.emt.forum.forummanagement.port.client;
 
 import mk.ukim.finki.emt.forum.forummanagement.aplication.RoleService;
+import mk.ukim.finki.emt.forum.sharedkernel.domain.role.RoleName;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
@@ -35,7 +36,7 @@ public class RoleServiceClient implements RoleService {
     }
 
     @Override
-    public UUID findRoleIdByRoleName(String roleName) {
+    public UUID findRoleIdByRoleName(RoleName roleName) {
         try {
             // /api/roles/{roleName}/id
             return restTemplate.exchange(uri().path(String.format("/api/roles/%s/id", roleName)).build().toUri(), HttpMethod.GET, null,
