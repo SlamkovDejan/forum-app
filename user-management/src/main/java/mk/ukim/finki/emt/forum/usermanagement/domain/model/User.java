@@ -4,8 +4,8 @@ import lombok.Getter;
 import mk.ukim.finki.emt.forum.sharedkernel.domain.base.AbstractEntity;
 import mk.ukim.finki.emt.forum.sharedkernel.domain.user.Username;
 import mk.ukim.finki.emt.forum.usermanagement.domain.value.Email;
+import mk.ukim.finki.emt.forum.usermanagement.domain.value.EncodedPassword;
 import mk.ukim.finki.emt.forum.usermanagement.domain.value.FullName;
-import mk.ukim.finki.emt.forum.usermanagement.domain.value.Password;
 import mk.ukim.finki.emt.forum.usermanagement.domain.value.UserId;
 import org.springframework.lang.NonNull;
 
@@ -26,7 +26,7 @@ public class User extends AbstractEntity<UserId> {
     private Email email;
 
     @Embedded
-    private Password password;
+    private EncodedPassword encodedPassword;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "role_id", nullable = false)
@@ -35,39 +35,36 @@ public class User extends AbstractEntity<UserId> {
     public User() {
     }
 
-    public User(@NonNull FullName fullName,@NonNull Username username,
-                @NonNull Email email,@NonNull Password password,@NonNull Role role) {
-
+    private User(@NonNull FullName fullName, @NonNull Username username,
+                 @NonNull Email email, @NonNull EncodedPassword encodedPassword, @NonNull Role role) {
         this.fullName = fullName;
         this.username = username;
         this.email = email;
-        this.password = password;
+        this.encodedPassword = encodedPassword;
         this.role = role;
     }
 
-    public boolean login(@NonNull Password password){
-        return this.password.equals(password);
+    public boolean login(@NonNull EncodedPassword encodedPassword){
+        return this.encodedPassword.equals(encodedPassword);
     }
 
-    public User changeFirstName(@NonNull String firstName){
+    public void changeFirstName(@NonNull String firstName){
         this.fullName = new FullName(firstName, this.fullName.getLastName());
-        return this;
     }
 
-    public User changeLastName(@NonNull String lastName){
+    public void changeLastName(@NonNull String lastName){
         this.fullName = new FullName(this.fullName.getFirstName(), lastName);
-        return this;
     }
 
-    public User changeEmail(@NonNull Email email){
+    public void changeEmail(@NonNull Email email){
         this.email = email;
-        return this;
     }
 
-    public static User signUp(@NonNull FullName fullName,@NonNull Username username,
-                              @NonNull Email email,@NonNull Password password,@NonNull Role role) {
-
-        return new User(fullName, username, email, password, role);
+    public static User signUp(@NonNull FullName fullName, @NonNull Username username,
+                              @NonNull Email email, @NonNull EncodedPassword encodedPassword, @NonNull Role role) {
+        return new User(fullName, username, email, encodedPassword, role);
     }
+
+    // TODO: change password
 
 }

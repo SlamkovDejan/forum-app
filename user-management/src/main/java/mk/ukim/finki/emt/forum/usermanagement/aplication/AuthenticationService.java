@@ -7,8 +7,8 @@ import mk.ukim.finki.emt.forum.usermanagement.domain.model.Role;
 import mk.ukim.finki.emt.forum.usermanagement.domain.model.User;
 import mk.ukim.finki.emt.forum.usermanagement.domain.repository.UserRepository;
 import mk.ukim.finki.emt.forum.usermanagement.domain.value.Email;
+import mk.ukim.finki.emt.forum.usermanagement.domain.value.EncodedPassword;
 import mk.ukim.finki.emt.forum.usermanagement.domain.value.FullName;
-import mk.ukim.finki.emt.forum.usermanagement.domain.value.Password;
 import mk.ukim.finki.emt.forum.usermanagement.domain.value.UserId;
 import org.springframework.lang.NonNull;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -33,8 +33,8 @@ public class AuthenticationService {
             throw new RuntimeException();
         }
 
-        Password password = new Password(passwordEncoder.encode(loginDto.getPassword()));
-        if(user.login(password)){
+        EncodedPassword encodedPassword = new EncodedPassword(passwordEncoder.encode(loginDto.getPassword()));
+        if(user.login(encodedPassword)){
             return user;
         }
         throw new RuntimeException();
@@ -45,11 +45,11 @@ public class AuthenticationService {
         FullName fullName = new FullName(userDto.getFirstName(), userDto.getLastName());
         Username username = new Username(userDto.getUsername());
         Email email = new Email(userDto.getEmail());
-        if(!Password.validatePassword(userDto.getPassword())){
+        if(!EncodedPassword.validatePassword(userDto.getPassword())){
             throw new RuntimeException();
         }
-        Password password = new Password(passwordEncoder.encode(userDto.getPassword()));
-        User user = User.signUp(fullName, username, email, password, new Role()); //TODO: discuss later
+        EncodedPassword encodedPassword = new EncodedPassword(passwordEncoder.encode(userDto.getPassword()));
+        User user = User.signUp(fullName, username, email, encodedPassword, new Role()); //TODO: discuss later
 
         userRepository.save(user);
         return user;

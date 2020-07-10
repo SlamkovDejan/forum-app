@@ -11,7 +11,7 @@ import java.util.Objects;
 
 @Getter
 @Embeddable
-public class Password implements ValueObject {
+public class EncodedPassword implements ValueObject {
 
     @Transient
     private static final String PASSWORD_REGEX = "^[a-zA-Z@#$%^&+=](?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=]).{8,32}$";
@@ -19,7 +19,7 @@ public class Password implements ValueObject {
     @Column(name = "password", nullable = false)
     private final String password;
 
-    public Password(@NonNull String password) {
+    public EncodedPassword(@NonNull String password) {
         this.password = password;
     }
 
@@ -31,8 +31,8 @@ public class Password implements ValueObject {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        Password password1 = (Password) o;
-        return password.equals(password1.password);
+        EncodedPassword encodedPassword1 = (EncodedPassword) o;
+        return password.equals(encodedPassword1.password);
     }
 
     @Override
