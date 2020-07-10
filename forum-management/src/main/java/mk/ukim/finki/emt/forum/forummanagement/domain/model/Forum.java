@@ -10,7 +10,6 @@ import org.springframework.lang.NonNull;
 import javax.persistence.*;
 import java.util.*;
 
-@Getter
 @Entity
 @Table(name = "forums")
 public class Forum extends AbstractEntity<ForumId> {
@@ -91,7 +90,7 @@ public class Forum extends AbstractEntity<ForumId> {
         return discussion.subscribe(subscriber);
     }
 
-    public boolean unsubscribeToDiscussion(DiscussionId discussionId, Subscription subscription){
+    public boolean unsubscribeFromDiscussion(DiscussionId discussionId, Subscription subscription){
         Discussion discussion = this.findDiscussionById(discussionId);
         return discussion.unsubscribe(subscription);
     }
