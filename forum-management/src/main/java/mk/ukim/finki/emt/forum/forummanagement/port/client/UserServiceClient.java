@@ -2,6 +2,7 @@ package mk.ukim.finki.emt.forum.forummanagement.port.client;
 
 import mk.ukim.finki.emt.forum.forummanagement.aplication.UserService;
 import mk.ukim.finki.emt.forum.forummanagement.domain.value.UserId;
+import mk.ukim.finki.emt.forum.sharedkernel.domain.user.Username;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
@@ -51,9 +52,26 @@ public class UserServiceClient implements UserService {
                     ).getBody()
             ).stream().map(UserId::new);
         } catch (Exception ex) {
-            System.err.printf("Error retrieving product by id; %s\n", ex);
+            System.err.printf("Error retrieving users by id; %s\n", ex);
             return null;
         }
+    }
+
+    @Override
+    public Username findUsernameByUserId(UUID userId){
+        try {
+            return restTemplate.exchange(
+                    uri().path(String.format("/api/users/%s/username", userId.toString())).build().toUri(),
+                    HttpMethod.GET,
+                    null,
+                    new ParameterizedTypeReference<Username>() {
+                    }).getBody();
+        } catch (Exception ex) {
+            System.err.printf("Error retrieving username by id; %s\n", ex);
+            return null;
+        }
+
+
     }
 
 }

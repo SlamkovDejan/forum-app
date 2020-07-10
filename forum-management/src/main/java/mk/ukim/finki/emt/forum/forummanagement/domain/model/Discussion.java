@@ -72,9 +72,13 @@ public class Discussion extends AbstractEntity<DiscussionId> {
         this.numberOfPosts = 1;
     }
 
+    Discussion updateLastPost(Post newPost, Username authorUsername){
+        this.lastPostInfo = new LastPostInfo(authorUsername, newPost.getTimestampPosted());
+        this.numberOfPosts++;
+        return this;
+    }
+
     void reply(Post parentPost, @NonNull Post newPost){
-        // TODO: update last post
-        // TODO: update number of posts
         parentPost.addReply(newPost);
     }
 

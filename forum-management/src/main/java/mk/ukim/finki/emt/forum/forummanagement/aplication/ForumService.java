@@ -121,7 +121,11 @@ public class ForumService {
 
         // TODO: fire event
         Post newPostReply = forum.replyOnDiscussion(discussionId, postContent, parentPost, author);
-        return this.postRepository.saveAndFlush(newPostReply);
+        this.postRepository.saveAndFlush(newPostReply);
+
+        Username authorUsername = userService.findUsernameByUserId(postReplyForm.getAuthorId());
+        this.discussionRepository.saveAndFlush(forum.updateDiscussionLastPost(discussionId, newPostReply, authorUsername));
+        return newPostReply;
     }
 
     public Set<Discussion> allDiscussionsOnForum(UUID forumId){

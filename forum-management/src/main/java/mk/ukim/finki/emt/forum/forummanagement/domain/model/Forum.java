@@ -1,6 +1,5 @@
 package mk.ukim.finki.emt.forum.forummanagement.domain.model;
 
-import lombok.Getter;
 import mk.ukim.finki.emt.forum.forummanagement.domain.exception.DiscussionNotFoundException;
 import mk.ukim.finki.emt.forum.forummanagement.domain.value.*;
 import mk.ukim.finki.emt.forum.sharedkernel.domain.base.AbstractEntity;
@@ -65,6 +64,11 @@ public class Forum extends AbstractEntity<ForumId> {
         Discussion newDiscussion = new Discussion(startedBy, initialPost, this);
         this.discussions.add(newDiscussion);
         return newDiscussion;
+    }
+
+    public Discussion updateDiscussionLastPost(DiscussionId discussionId, Post newPost, Username authorUsername){
+        Discussion discussion = this.findDiscussionById(discussionId);
+        return discussion.updateLastPost(newPost, authorUsername);
     }
 
     public Post replyOnDiscussion(DiscussionId discussionId, Content content, Post parentPost, UserId author){
