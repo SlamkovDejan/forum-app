@@ -18,6 +18,7 @@ import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -38,6 +39,12 @@ public class ForumService {
         this.postRepository = postRepository;
         this.discussionRepository = discussionRepository;
         this.subscriptionRepository = subscriptionRepository;
+    }
+
+    private Subscription createSubscriptionOnForumDiscussion(Forum forum, UUID discussionId, UUID subscriberId){
+        DiscussionId discussion = new DiscussionId(discussionId);
+        UserId subscriber = new UserId(subscriberId);
+        return forum.subscribeToDiscussion(discussion, subscriber);
     }
 
     // TODO: discuss method names: suffix Forum
@@ -66,7 +73,13 @@ public class ForumService {
         Username startedBy = new Username(discussionDTO.getStartedByUsername());
 
         Discussion newDiscussion = forum.openDiscussion(startedBy, initialPostOnDiscussion);
-        return this.discussionRepository.save(newDiscussion);
+        this.discussionRepository.save(newDiscussion);
+
+        // auto subscribe the starter of the discussion
+        Subscription newSubscription = this.createSubscriptionOnForumDiscussion(forum, newDiscussion.id().getId(), initialPostAuthor.getId());
+        this.subscriptionRepository.save(newSubscription);
+
+        return newDiscussion;
     }
 
     public Post replyOnForumDiscussion(PostReplyDTO postReplyDTO){
@@ -80,6 +93,14 @@ public class ForumService {
         Post parentPost = this.postRepository.findById(new PostId(postReplyDTO.getParentPostId()))
                 .orElseThrow(RuntimeException::new);
         UserId author = new UserId(postReplyDTO.getAuthorId());
+
+        // auto subscribe the author of the post to the discussion (if not already subscribed)
+        Optional<Subscription> subscription = this.subscriptionRepository.findFirstByDiscussion_IdAndSubscriber(discussionId, author);
+        boolean isSubscribed = subscription.isPresent();
+        if(!isSubscribed){
+            Subscription newSubscription = this.createSubscriptionOnForumDiscussion(forum, discussionId.getId(), author.getId());
+            this.subscriptionRepository.save(newSubscription);
+        }
 
         // TODO: fire event
         Post newPostReply = forum.replyOnDiscussion(discussionId, postContent, parentPost, author);
@@ -106,10 +127,7 @@ public class ForumService {
         Forum forum = this.forumRepository.findById(new ForumId(subscribeDTO.getForumId()))
                 .orElseThrow(RuntimeException::new);
 
-        DiscussionId discussionId = new DiscussionId(subscribeDTO.getDiscussionId());
-        UserId subscriber = new UserId(subscribeDTO.getSubscriberId());
-
-        Subscription newSubscription = forum.subscribeToDiscussion(discussionId, subscriber);
+        Subscription newSubscription = createSubscriptionOnForumDiscussion(forum, subscribeDTO.getDiscussionId(), subscribeDTO.getSubscriberId());
         return this.subscriptionRepository.save(newSubscription);
     }
 
