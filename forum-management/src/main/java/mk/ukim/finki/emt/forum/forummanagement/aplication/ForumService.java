@@ -4,6 +4,9 @@ import mk.ukim.finki.emt.forum.forummanagement.aplication.dto.DiscussionDTO;
 import mk.ukim.finki.emt.forum.forummanagement.aplication.dto.ForumDTO;
 import mk.ukim.finki.emt.forum.forummanagement.aplication.dto.PostReplyDTO;
 import mk.ukim.finki.emt.forum.forummanagement.aplication.dto.SubscribeDTO;
+import mk.ukim.finki.emt.forum.forummanagement.domain.exception.ForumNotFoundException;
+import mk.ukim.finki.emt.forum.forummanagement.domain.exception.PostNotFoundException;
+import mk.ukim.finki.emt.forum.forummanagement.domain.exception.UserNotSubscribedException;
 import mk.ukim.finki.emt.forum.forummanagement.domain.model.Discussion;
 import mk.ukim.finki.emt.forum.forummanagement.domain.model.Forum;
 import mk.ukim.finki.emt.forum.forummanagement.domain.model.Post;
@@ -76,9 +79,8 @@ public class ForumService {
     }
 
     public Discussion openNewDiscussionOnForum(DiscussionDTO discussionDTO){
-        // TODO: custom exception
         Forum forum = this.forumRepository.findById(new ForumId(discussionDTO.getForumId()))
-                .orElseThrow(RuntimeException::new);
+                .orElseThrow(ForumNotFoundException::new);
 
         Title initialPostSubject = new Title(discussionDTO.getInitialPost().getSubject());
         Content initialPostContent = new Content(discussionDTO.getInitialPost().getContent());
@@ -105,15 +107,13 @@ public class ForumService {
     }
 
     public Post replyOnForumDiscussion(PostReplyDTO postReplyDTO){
-        // TODO: custom exception
         Forum forum = this.forumRepository.findById(new ForumId(postReplyDTO.getForumId()))
-                .orElseThrow(RuntimeException::new);
+                .orElseThrow(ForumNotFoundException::new);
 
         DiscussionId discussionId = new DiscussionId(postReplyDTO.getDiscussionId());
         Content postContent = new Content(postReplyDTO.getContent());
-        // TODO: custom exception
         Post parentPost = this.postRepository.findById(new PostId(postReplyDTO.getParentPostId()))
-                .orElseThrow(RuntimeException::new);
+                .orElseThrow(PostNotFoundException::new);
         UserId author = new UserId(postReplyDTO.getAuthorId());
 
         // auto subscribe the author of the post to the discussion (if not already subscribed)
@@ -125,41 +125,37 @@ public class ForumService {
     }
 
     public Set<Discussion> allDiscussionsOnForum(UUID forumId){
-        // TODO: custom exception
         Forum forum = this.forumRepository.findById(new ForumId(forumId))
-                .orElseThrow(RuntimeException::new);
+                .orElseThrow(ForumNotFoundException::new);
         return forum.allDiscussions();
     }
 
     public Post getDiscussionOnForum(UUID forumId, UUID discussionId){
-        // TODO: custom exception
         Forum forum = this.forumRepository.findById(new ForumId(forumId))
-                .orElseThrow(RuntimeException::new);
+                .orElseThrow(ForumNotFoundException::new);
         return forum.discussion(new DiscussionId(discussionId));
     }
 
     public Subscription subscribeOnForumDiscussion(SubscribeDTO subscribeDTO){
-        // TODO: custom exception
         Forum forum = this.forumRepository.findById(new ForumId(subscribeDTO.getForumId()))
-                .orElseThrow(RuntimeException::new);
+                .orElseThrow(ForumNotFoundException::new);
 
         Subscription newSubscription = createSubscriptionOnForumDiscussion(forum, subscribeDTO.getDiscussionId(), subscribeDTO.getSubscriberId());
         return this.subscriptionRepository.saveAndFlush(newSubscription);
     }
-    
+
     public boolean UnsubscribeFromForumDiscussion(SubscribeDTO subscribeDTO){
-        // TODO: custom exception
         Forum forum = this.forumRepository.findById(new ForumId(subscribeDTO.getForumId()))
-                .orElseThrow(RuntimeException::new);
+                .orElseThrow(ForumNotFoundException::new);
 
         DiscussionId discussionId = new DiscussionId(subscribeDTO.getDiscussionId());
         UserId subscriber = new UserId(subscribeDTO.getSubscriberId());
         Subscription subscription = this.subscriptionRepository.findFirstByDiscussion_IdAndSubscriber(discussionId, subscriber)
-                .orElseThrow(RuntimeException::new); // TODO: custom exception
+                .orElseThrow(UserNotSubscribedException::new);
 
         boolean unsubscribed = forum.unsubscribeFromDiscussion(discussionId, subscription);
         if(!unsubscribed)
-            throw new RuntimeException(); // TODO: custom exception
+            throw new UserNotSubscribedException();
         this.subscriptionRepository.deleteById(subscription.id());
         return true;
     }

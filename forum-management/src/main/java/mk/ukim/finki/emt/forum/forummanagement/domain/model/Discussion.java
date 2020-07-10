@@ -73,8 +73,6 @@ public class Discussion extends AbstractEntity<DiscussionId> {
     }
 
     void reply(Post parentPost, @NonNull Post newPost){
-        // TODO: update last post
-        // TODO: update number of posts
         parentPost.addReply(newPost);
     }
 
