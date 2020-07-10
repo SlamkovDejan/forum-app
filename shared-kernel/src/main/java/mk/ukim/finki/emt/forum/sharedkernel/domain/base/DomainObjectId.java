@@ -17,7 +17,7 @@ public abstract class DomainObjectId implements ValueObject {
         this.id = UUID.randomUUID();
     }
 
-    protected DomainObjectId(UUID id){
+    public DomainObjectId(UUID id){
         this.id = id;
     }
 

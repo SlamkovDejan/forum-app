@@ -5,6 +5,7 @@ import lombok.Setter;
 
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
+import java.util.UUID;
 
 @Getter
 @Setter
@@ -25,6 +26,6 @@ public class UserDto implements Serializable {
     @NotNull
     private String password;
 
-    //@NotNull
-    //private Role role;
+    @NotNull
+    private UUID roleId;
 }

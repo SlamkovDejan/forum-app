@@ -60,11 +60,20 @@ public class User extends AbstractEntity<UserId> {
         this.email = email;
     }
 
-    public static User signUp(@NonNull FullName fullName, @NonNull Username username,
-                              @NonNull Email email, @NonNull EncodedPassword encodedPassword, @NonNull Role role) {
-        return new User(fullName, username, email, encodedPassword, role);
+    public void changePassword(EncodedPassword newPassword, EncodedPassword oldPassword) {
+        if(!this.encodedPassword.equals(oldPassword)){
+            throw new RuntimeException();
+        }
+        if(this.encodedPassword.equals(newPassword)){
+            throw new RuntimeException();
+        }
+        this.encodedPassword = newPassword;
     }
 
-    // TODO: change password
+    public static User signUp(@NonNull FullName fullName,@NonNull Username username,
+                              @NonNull Email email,@NonNull EncodedPassword password,@NonNull Role role) {
+
+        return new User(fullName, username, email, password, role);
+    }
 
 }
