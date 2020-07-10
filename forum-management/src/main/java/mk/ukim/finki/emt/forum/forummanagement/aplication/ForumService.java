@@ -4,10 +4,7 @@ import mk.ukim.finki.emt.forum.forummanagement.aplication.form.DiscussionForm;
 import mk.ukim.finki.emt.forum.forummanagement.aplication.form.ForumForm;
 import mk.ukim.finki.emt.forum.forummanagement.aplication.form.PostReplyForm;
 import mk.ukim.finki.emt.forum.forummanagement.aplication.dto.SubscriptionDTO;
-import mk.ukim.finki.emt.forum.forummanagement.domain.exception.ForumNotFoundException;
-import mk.ukim.finki.emt.forum.forummanagement.domain.exception.PostNotFoundException;
-import mk.ukim.finki.emt.forum.forummanagement.domain.exception.UserNotAuthorizedException;
-import mk.ukim.finki.emt.forum.forummanagement.domain.exception.UserNotSubscribedException;
+import mk.ukim.finki.emt.forum.forummanagement.domain.exception.*;
 import mk.ukim.finki.emt.forum.forummanagement.domain.model.Discussion;
 import mk.ukim.finki.emt.forum.forummanagement.domain.model.Forum;
 import mk.ukim.finki.emt.forum.forummanagement.domain.model.Post;
@@ -17,15 +14,19 @@ import mk.ukim.finki.emt.forum.forummanagement.domain.repository.ForumRepository
 import mk.ukim.finki.emt.forum.forummanagement.domain.repository.PostRepository;
 import mk.ukim.finki.emt.forum.forummanagement.domain.repository.SubscriptionRepository;
 import mk.ukim.finki.emt.forum.forummanagement.domain.value.*;
+import mk.ukim.finki.emt.forum.sharedkernel.domain.email.NotifySubscribersMessage;
 import mk.ukim.finki.emt.forum.sharedkernel.domain.role.RoleName;
 import mk.ukim.finki.emt.forum.sharedkernel.domain.user.Username;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -37,19 +38,22 @@ public class ForumService {
     private final SubscriptionRepository subscriptionRepository;
     private final UserService userService;
     private final RoleService roleService;
+    private final KafkaTemplate<String, NotifySubscribersMessage> kafkaTemplate;
 
     public ForumService(ForumRepository forumRepository,
                         PostRepository postRepository,
                         DiscussionRepository discussionRepository,
                         SubscriptionRepository subscriptionRepository,
                         UserService userService,
-                        RoleService roleService) {
+                        RoleService roleService,
+                        KafkaTemplate<String, NotifySubscribersMessage> kafkaTemplate) {
         this.forumRepository = forumRepository;
         this.postRepository = postRepository;
         this.discussionRepository = discussionRepository;
         this.subscriptionRepository = subscriptionRepository;
         this.userService = userService;
         this.roleService = roleService;
+        this.kafkaTemplate = kafkaTemplate;
     }
 
     private boolean isStudent(@NonNull UserId userId){
@@ -72,6 +76,26 @@ public class ForumService {
             Subscription newSubscription = this.createSubscriptionOnForumDiscussion(forum, discussionId.getId(), subscriber.getId());
             this.subscriptionRepository.saveAndFlush(newSubscription);
         }
+    }
+
+    private NotifySubscribersMessage constructMessage(DiscussionId discussionId, Content contentFromPost){
+        NotifySubscribersMessage notifySubscribersMessage = new NotifySubscribersMessage();
+
+        List<UUID> usersToNotify = this.subscriptionRepository.findAllByDiscussion_Id(discussionId)
+                .map(subscription -> subscription.id().getId())
+                .collect(Collectors.toList());
+        String text = contentFromPost.getContent();
+
+        Title discussionTopic = this.discussionRepository.findById(discussionId)
+                .orElseThrow(DiscussionNotFoundException::new).getTopic();
+
+        String subject = String.format("New reply on discussion: %s", discussionTopic.getTitle());
+
+        notifySubscribersMessage.setSubject(subject);
+        notifySubscribersMessage.setText(text);
+        notifySubscribersMessage.setUserIds(usersToNotify);
+
+        return notifySubscribersMessage;
     }
 
     public Forum createForum(@NonNull UserId loggedUser, @NonNull ForumForm forumForm){
@@ -126,7 +150,6 @@ public class ForumService {
         UserId initialPostAuthor = new UserId(discussionForm.getInitialPost().getAuthorId());
         Post initialPostOnDiscussion = forum.createInitialPostForDiscussion(initialPostSubject, initialPostContent,initialPostAuthor);
         this.postRepository.saveAndFlush(initialPostOnDiscussion);
-        // TODO: fire event ?
 
         Username startedBy = new Username(discussionForm.getStartedByUsername());
 
@@ -141,6 +164,11 @@ public class ForumService {
         if(forum.autoSubscribe()){
             UUID roleId = this.roleService.findRoleIdByRoleName(RoleName.STUDENT);
             this.userService.findAllUserIdsByRoleId(roleId).forEach((userId) -> this.autoSubscribe(forum, newDiscussion.id(), userId));
+
+            // if the auto subscribe feature is on, then notify the students
+            NotifySubscribersMessage message = this.constructMessage(newDiscussion.id(), initialPostContent);
+            this.kafkaTemplate.send("notifySubscribers", message);
+            this.kafkaTemplate.flush();
         }
         return newDiscussion;
     }
@@ -162,9 +190,13 @@ public class ForumService {
         // auto subscribe the author of the post to the discussion (if not already subscribed)
         this.autoSubscribe(forum, discussionId, author);
 
-        // TODO: fire event
         Post newPostReply = forum.replyOnDiscussion(discussionId, postContent, parentPost, author);
         this.postRepository.saveAndFlush(newPostReply);
+
+        // sending message with kafka
+        NotifySubscribersMessage message = this.constructMessage(discussionId, postContent);
+        this.kafkaTemplate.send("notifySubscribers", message);
+        this.kafkaTemplate.flush();
 
         Username authorUsername = userService.findUsernameByUserId(postReplyForm.getAuthorId());
         this.discussionRepository.saveAndFlush(forum.updateDiscussionLastPost(discussionId, newPostReply, authorUsername));

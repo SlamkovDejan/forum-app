@@ -8,11 +8,14 @@ import mk.ukim.finki.emt.forum.forummanagement.domain.value.UserId;
 import mk.ukim.finki.emt.forum.sharedkernel.domain.base.DomainObjectId;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+
 import java.util.Optional;
-import java.util.UUID;
+import java.util.stream.Stream;
 
 public interface SubscriptionRepository extends JpaRepository<Subscription, SubscriptionId> {
 
     Optional<Subscription> findFirstByDiscussion_IdAndSubscriber(DomainObjectId discussion_id, UserId subscriber);
+
+    Stream<Subscription> findAllByDiscussion_Id(DomainObjectId discussionId);
 
 }

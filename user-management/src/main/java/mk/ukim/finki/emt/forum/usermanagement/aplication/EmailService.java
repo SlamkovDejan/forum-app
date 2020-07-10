@@ -5,6 +5,7 @@ import mk.ukim.finki.emt.forum.usermanagement.domain.model.User;
 import mk.ukim.finki.emt.forum.usermanagement.domain.repository.UserRepository;
 import mk.ukim.finki.emt.forum.usermanagement.domain.value.Email;
 import mk.ukim.finki.emt.forum.usermanagement.domain.value.UserId;
+import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
@@ -38,6 +39,7 @@ public class EmailService {
         emailSender.send(message);
     }
 
+    @KafkaListener(topics = "notifySubscribers", id = "1")
     public void sendEmails(NotifySubscribersMessage notifyObj){
         List<User> users = userRepository.findAllById(
                 notifyObj.getUserIds().stream().map(UserId::new).collect(Collectors.toList()));
