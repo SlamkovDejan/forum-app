@@ -7,7 +7,7 @@ import lombok.Data;
 import java.util.UUID;
 
 @Data
-public class SubscribeDTO {
+public class SubscriptionDTO {
 
     @NotNull
     private UUID forumId;

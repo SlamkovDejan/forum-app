@@ -3,7 +3,7 @@ package mk.ukim.finki.emt.forum.forummanagement.aplication;
 import mk.ukim.finki.emt.forum.forummanagement.aplication.form.DiscussionForm;
 import mk.ukim.finki.emt.forum.forummanagement.aplication.form.ForumForm;
 import mk.ukim.finki.emt.forum.forummanagement.aplication.form.PostReplyForm;
-import mk.ukim.finki.emt.forum.forummanagement.aplication.dto.SubscribeDTO;
+import mk.ukim.finki.emt.forum.forummanagement.aplication.dto.SubscriptionDTO;
 import mk.ukim.finki.emt.forum.forummanagement.domain.exception.ForumNotFoundException;
 import mk.ukim.finki.emt.forum.forummanagement.domain.exception.PostNotFoundException;
 import mk.ukim.finki.emt.forum.forummanagement.domain.exception.UserNotSubscribedException;
@@ -106,15 +106,15 @@ public class ForumService {
         return newDiscussion;
     }
 
-    public Post replyOnForumDiscussion(PostReplyForm postReplyDTO){
-        Forum forum = this.forumRepository.findById(new ForumId(postReplyDTO.getForumId()))
+    public Post replyOnForumDiscussion(PostReplyForm postReplyForm){
+        Forum forum = this.forumRepository.findById(new ForumId(postReplyForm.getForumId()))
                 .orElseThrow(ForumNotFoundException::new);
 
-        DiscussionId discussionId = new DiscussionId(postReplyDTO.getDiscussionId());
-        Content postContent = new Content(postReplyDTO.getContent());
-        Post parentPost = this.postRepository.findById(new PostId(postReplyDTO.getParentPostId()))
+        DiscussionId discussionId = new DiscussionId(postReplyForm.getDiscussionId());
+        Content postContent = new Content(postReplyForm.getContent());
+        Post parentPost = this.postRepository.findById(new PostId(postReplyForm.getParentPostId()))
                 .orElseThrow(PostNotFoundException::new);
-        UserId author = new UserId(postReplyDTO.getAuthorId());
+        UserId author = new UserId(postReplyForm.getAuthorId());
 
         // auto subscribe the author of the post to the discussion (if not already subscribed)
         this.autoSubscribe(forum, discussionId, author);
@@ -123,7 +123,7 @@ public class ForumService {
         Post newPostReply = forum.replyOnDiscussion(discussionId, postContent, parentPost, author);
         this.postRepository.saveAndFlush(newPostReply);
 
-        Username authorUsername = userService.findUsernameByUserId(postReplyDTO.getAuthorId());
+        Username authorUsername = userService.findUsernameByUserId(postReplyForm.getAuthorId());
         this.discussionRepository.saveAndFlush(forum.updateDiscussionLastPost(discussionId, newPostReply, authorUsername));
         return newPostReply;
     }
@@ -140,20 +140,20 @@ public class ForumService {
         return forum.discussion(new DiscussionId(discussionId));
     }
 
-    public Subscription subscribeOnForumDiscussion(SubscribeDTO subscribeDTO){
-        Forum forum = this.forumRepository.findById(new ForumId(subscribeDTO.getForumId()))
+    public Subscription subscribeOnForumDiscussion(SubscriptionDTO subscriptionDTO){
+        Forum forum = this.forumRepository.findById(new ForumId(subscriptionDTO.getForumId()))
                 .orElseThrow(ForumNotFoundException::new);
 
-        Subscription newSubscription = createSubscriptionOnForumDiscussion(forum, subscribeDTO.getDiscussionId(), subscribeDTO.getSubscriberId());
+        Subscription newSubscription = createSubscriptionOnForumDiscussion(forum, subscriptionDTO.getDiscussionId(), subscriptionDTO.getSubscriberId());
         return this.subscriptionRepository.saveAndFlush(newSubscription);
     }
 
-    public boolean UnsubscribeFromForumDiscussion(SubscribeDTO subscribeDTO){
-        Forum forum = this.forumRepository.findById(new ForumId(subscribeDTO.getForumId()))
+    public boolean UnsubscribeFromForumDiscussion(SubscriptionDTO subscriptionDTO){
+        Forum forum = this.forumRepository.findById(new ForumId(subscriptionDTO.getForumId()))
                 .orElseThrow(ForumNotFoundException::new);
 
-        DiscussionId discussionId = new DiscussionId(subscribeDTO.getDiscussionId());
-        UserId subscriber = new UserId(subscribeDTO.getSubscriberId());
+        DiscussionId discussionId = new DiscussionId(subscriptionDTO.getDiscussionId());
+        UserId subscriber = new UserId(subscriptionDTO.getSubscriberId());
         Subscription subscription = this.subscriptionRepository.findFirstByDiscussion_IdAndSubscriber(discussionId, subscriber)
                 .orElseThrow(UserNotSubscribedException::new);
 
