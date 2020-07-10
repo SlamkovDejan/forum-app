@@ -1,6 +1,7 @@
 package mk.ukim.finki.emt.forum.usermanagement.port.rest;
 
 import mk.ukim.finki.emt.forum.sharedkernel.domain.user.Username;
+import mk.ukim.finki.emt.forum.usermanagement.domain.exception.UserNotFoundException;
 import mk.ukim.finki.emt.forum.usermanagement.domain.model.User;
 import mk.ukim.finki.emt.forum.usermanagement.domain.repository.UserRepository;
 import mk.ukim.finki.emt.forum.usermanagement.domain.value.RoleId;
@@ -50,6 +51,12 @@ public class UserController {
         return userRepository.findUsernameById(new UserId(userId))
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/{id}/role")
+    public ResponseEntity<UUID> findRoleByUserOd(@PathVariable("id") UUID userId) {
+        User user = userRepository.findById(new UserId(userId)).orElseThrow(UserNotFoundException::new);
+        return ResponseEntity.ok(user.getRole().id().getId());
     }
 
 }

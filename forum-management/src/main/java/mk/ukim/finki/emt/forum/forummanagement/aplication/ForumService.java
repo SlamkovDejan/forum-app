@@ -6,6 +6,7 @@ import mk.ukim.finki.emt.forum.forummanagement.aplication.form.PostReplyForm;
 import mk.ukim.finki.emt.forum.forummanagement.aplication.dto.SubscriptionDTO;
 import mk.ukim.finki.emt.forum.forummanagement.domain.exception.ForumNotFoundException;
 import mk.ukim.finki.emt.forum.forummanagement.domain.exception.PostNotFoundException;
+import mk.ukim.finki.emt.forum.forummanagement.domain.exception.UserNotAuthorizedException;
 import mk.ukim.finki.emt.forum.forummanagement.domain.exception.UserNotSubscribedException;
 import mk.ukim.finki.emt.forum.forummanagement.domain.model.Discussion;
 import mk.ukim.finki.emt.forum.forummanagement.domain.model.Forum;
@@ -51,15 +52,20 @@ public class ForumService {
         this.roleService = roleService;
     }
 
-    //TODO: change who can create discussion
+    private boolean isStudent(@NonNull UserId userId){
+        UUID roleId = userService.findRoleIdByUserId(userId.getId());
+        RoleName roleName = roleService.findRoleNameByRoleId(roleId);
+        return roleName.equals(RoleName.STUDENT);
+    }
 
-    private Subscription createSubscriptionOnForumDiscussion(Forum forum, UUID discussionId, UUID subscriberId){
+    private Subscription createSubscriptionOnForumDiscussion(
+            @NonNull Forum forum,@NonNull UUID discussionId,@NonNull UUID subscriberId){
         DiscussionId discussion = new DiscussionId(discussionId);
         UserId subscriber = new UserId(subscriberId);
         return forum.subscribeToDiscussion(discussion, subscriber);
     }
 
-    private void autoSubscribe(Forum forum, DiscussionId discussionId, UserId subscriber){
+    private void autoSubscribe(@NonNull Forum forum,@NonNull DiscussionId discussionId,@NonNull UserId subscriber){
         Optional<Subscription> subscription = this.subscriptionRepository.findFirstByDiscussion_IdAndSubscriber(discussionId, subscriber);
         boolean isSubscribed = subscription.isPresent();
         if(!isSubscribed){
@@ -68,7 +74,10 @@ public class ForumService {
         }
     }
 
-    public Forum createForum(@NonNull ForumForm forumForm){
+    public Forum createForum(@NonNull UserId loggedUser, @NonNull ForumForm forumForm){
+        if(isStudent(loggedUser)){
+            throw new UserNotAuthorizedException();
+        }
         Title forumTitle = new Title(forumForm.getTitle());
         Description forumDescription = new Description(forumForm.getDescription());
         boolean autoSubscribeStudents = forumForm.isAutoSubscribeStudents();
@@ -78,9 +87,39 @@ public class ForumService {
         return forumRepository.saveAndFlush(newForum);
     }
 
-    public Discussion openNewDiscussionOnForum(DiscussionForm discussionForm){
+    public Forum enableStudentReplies(@NonNull UUID loggedUserId, @NonNull UUID forumId){
+        if(isStudent(new UserId(loggedUserId))) {
+            throw new UserNotAuthorizedException();
+        }
+
+        Forum forum = this.forumRepository.findById(new ForumId(forumId))
+                .orElseThrow(ForumNotFoundException::new);
+
+        forum.updateCanStudentsReply(true);
+        forumRepository.saveAndFlush(forum);
+        return forum;
+    }
+
+    public Forum disableStudentReplies(@NonNull UUID loggedUserId, @NonNull UUID forumId){
+        if(isStudent(new UserId(loggedUserId))) {
+            throw new UserNotAuthorizedException();
+        }
+
+        Forum forum = this.forumRepository.findById(new ForumId(forumId))
+                .orElseThrow(ForumNotFoundException::new);
+
+        forum.updateCanStudentsReply(false);
+        forumRepository.saveAndFlush(forum);
+        return forum;
+    }
+
+    public Discussion openNewDiscussionOnForum(@NonNull UUID loggedUserId,@NonNull DiscussionForm discussionForm){
         Forum forum = this.forumRepository.findById(new ForumId(discussionForm.getForumId()))
                 .orElseThrow(ForumNotFoundException::new);
+
+        if(!forum.canStudentsReply() && isStudent(new UserId(loggedUserId))) {
+            throw new UserNotAuthorizedException();
+        }
 
         Title initialPostSubject = new Title(discussionForm.getInitialPost().getSubject());
         Content initialPostContent = new Content(discussionForm.getInitialPost().getContent());
@@ -106,9 +145,13 @@ public class ForumService {
         return newDiscussion;
     }
 
-    public Post replyOnForumDiscussion(PostReplyForm postReplyForm){
+    public Post replyOnForumDiscussion(@NonNull UUID loggedUserId, @NonNull PostReplyForm postReplyForm){
         Forum forum = this.forumRepository.findById(new ForumId(postReplyForm.getForumId()))
                 .orElseThrow(ForumNotFoundException::new);
+
+        if(!forum.canStudentsReply() && isStudent(new UserId(loggedUserId))){
+            throw new UserNotAuthorizedException();
+        }
 
         DiscussionId discussionId = new DiscussionId(postReplyForm.getDiscussionId());
         Content postContent = new Content(postReplyForm.getContent());
@@ -128,19 +171,19 @@ public class ForumService {
         return newPostReply;
     }
 
-    public Set<Discussion> allDiscussionsOnForum(UUID forumId){
+    public Set<Discussion> allDiscussionsOnForum(@NonNull UUID forumId){
         Forum forum = this.forumRepository.findById(new ForumId(forumId))
                 .orElseThrow(ForumNotFoundException::new);
         return forum.allDiscussions();
     }
 
-    public Post getDiscussionOnForum(UUID forumId, UUID discussionId){
+    public Post getDiscussionOnForum(@NonNull UUID forumId,@NonNull UUID discussionId){
         Forum forum = this.forumRepository.findById(new ForumId(forumId))
                 .orElseThrow(ForumNotFoundException::new);
         return forum.discussion(new DiscussionId(discussionId));
     }
 
-    public Subscription subscribeOnForumDiscussion(SubscriptionDTO subscriptionDTO){
+    public Subscription subscribeOnForumDiscussion(@NonNull SubscriptionDTO subscriptionDTO){
         Forum forum = this.forumRepository.findById(new ForumId(subscriptionDTO.getForumId()))
                 .orElseThrow(ForumNotFoundException::new);
 
@@ -148,7 +191,7 @@ public class ForumService {
         return this.subscriptionRepository.saveAndFlush(newSubscription);
     }
 
-    public boolean UnsubscribeFromForumDiscussion(SubscriptionDTO subscriptionDTO){
+    public boolean UnsubscribeFromForumDiscussion(@NonNull SubscriptionDTO subscriptionDTO){
         Forum forum = this.forumRepository.findById(new ForumId(subscriptionDTO.getForumId()))
                 .orElseThrow(ForumNotFoundException::new);
 

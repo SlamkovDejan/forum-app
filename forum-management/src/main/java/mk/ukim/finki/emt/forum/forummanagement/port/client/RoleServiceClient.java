@@ -2,6 +2,7 @@ package mk.ukim.finki.emt.forum.forummanagement.port.client;
 
 import mk.ukim.finki.emt.forum.forummanagement.aplication.RoleService;
 import mk.ukim.finki.emt.forum.sharedkernel.domain.role.RoleName;
+import mk.ukim.finki.emt.forum.sharedkernel.domain.user.Username;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
@@ -44,6 +45,21 @@ public class RoleServiceClient implements RoleService {
                     }).getBody();
         } catch (Exception ex) {
             System.err.printf("Error retrieving product by id; %s\n", ex);
+            return null;
+        }
+    }
+
+    @Override
+    public RoleName findRoleNameByRoleId(UUID roleId){
+        try {
+            return restTemplate.exchange(
+                    uri().path(String.format("/api/roles/%s/name", roleId.toString())).build().toUri(),
+                    HttpMethod.GET,
+                    null,
+                    new ParameterizedTypeReference<RoleName>() {
+                    }).getBody();
+        } catch (Exception ex) {
+            System.err.printf("Error retrieving roleName by id; %s\n", ex);
             return null;
         }
     }

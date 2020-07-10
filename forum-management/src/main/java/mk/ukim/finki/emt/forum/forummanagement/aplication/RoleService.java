@@ -8,4 +8,5 @@ public interface RoleService {
 
     UUID findRoleIdByRoleName(RoleName roleName);
 
+    RoleName findRoleNameByRoleId(UUID roleId);
 }

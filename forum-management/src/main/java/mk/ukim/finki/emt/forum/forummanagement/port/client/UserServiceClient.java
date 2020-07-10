@@ -70,8 +70,21 @@ public class UserServiceClient implements UserService {
             System.err.printf("Error retrieving username by id; %s\n", ex);
             return null;
         }
+    }
 
-
+    @Override
+    public UUID findRoleIdByUserId(UUID userId){
+        try {
+            return restTemplate.exchange(
+                    uri().path(String.format("/api/users/%s/role", userId.toString())).build().toUri(),
+                    HttpMethod.GET,
+                    null,
+                    new ParameterizedTypeReference<UUID>() {
+                    }).getBody();
+        } catch (Exception ex) {
+            System.err.printf("Error retrieving role by userId; %s\n", ex);
+            return null;
+        }
     }
 
 }

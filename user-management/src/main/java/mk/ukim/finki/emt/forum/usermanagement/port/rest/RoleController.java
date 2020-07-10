@@ -1,5 +1,6 @@
 package mk.ukim.finki.emt.forum.usermanagement.port.rest;
 
+import mk.ukim.finki.emt.forum.usermanagement.domain.exception.RoleNotFoundException;
 import mk.ukim.finki.emt.forum.usermanagement.domain.model.Role;
 import mk.ukim.finki.emt.forum.sharedkernel.domain.role.RoleName;
 import mk.ukim.finki.emt.forum.usermanagement.domain.repository.RoleRepository;
@@ -39,5 +40,11 @@ public class RoleController {
         return roleRepository.findById(new RoleId(roleId))
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/{id}/name")
+    public ResponseEntity<RoleName> isStudent(@PathVariable("id") UUID roleId){
+        Role role = roleRepository.findById(new RoleId(roleId)).orElseThrow(RoleNotFoundException::new);
+        return ResponseEntity.ok(role.getRoleName());
     }
 }

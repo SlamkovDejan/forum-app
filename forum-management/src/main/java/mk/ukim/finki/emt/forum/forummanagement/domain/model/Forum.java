@@ -116,4 +116,7 @@ public class Forum extends AbstractEntity<ForumId> {
         return this.canStudentsReply;
     }
 
+    public void updateCanStudentsReply(boolean canStudentsReply) {
+        this.canStudentsReply = canStudentsReply;
+    }
 }

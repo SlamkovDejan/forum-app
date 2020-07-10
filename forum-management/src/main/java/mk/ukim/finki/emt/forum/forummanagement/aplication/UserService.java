@@ -13,4 +13,6 @@ public interface UserService {
 
     Username findUsernameByUserId(UUID userId);
 
+    UUID findRoleIdByUserId(UUID userId);
+
 }
