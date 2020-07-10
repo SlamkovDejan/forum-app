@@ -2,6 +2,7 @@ package mk.ukim.finki.emt.forum.usermanagement.domain.value;
 
 import lombok.Getter;
 import mk.ukim.finki.emt.forum.sharedkernel.domain.base.ValueObject;
+import mk.ukim.finki.emt.forum.usermanagement.domain.exception.InvalidEmailException;
 import org.springframework.lang.NonNull;
 
 import javax.persistence.Column;
@@ -22,7 +23,7 @@ public class Email implements ValueObject {
     public Email(@NonNull String email) {
         email = email.trim();
         if(!email.matches(EMAIL_REGEX)){
-            throw new RuntimeException();
+            throw new InvalidEmailException();
         }
         this.email = email;
     }

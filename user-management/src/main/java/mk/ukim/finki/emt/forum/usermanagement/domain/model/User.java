@@ -3,6 +3,7 @@ package mk.ukim.finki.emt.forum.usermanagement.domain.model;
 import lombok.Getter;
 import mk.ukim.finki.emt.forum.sharedkernel.domain.base.AbstractEntity;
 import mk.ukim.finki.emt.forum.sharedkernel.domain.user.Username;
+import mk.ukim.finki.emt.forum.usermanagement.domain.exception.PasswordException;
 import mk.ukim.finki.emt.forum.usermanagement.domain.value.Email;
 import mk.ukim.finki.emt.forum.usermanagement.domain.value.EncodedPassword;
 import mk.ukim.finki.emt.forum.usermanagement.domain.value.FullName;
@@ -62,10 +63,10 @@ public class User extends AbstractEntity<UserId> {
 
     public void changePassword(EncodedPassword newPassword, EncodedPassword oldPassword) {
         if(!this.encodedPassword.equals(oldPassword)){
-            throw new RuntimeException();
+            throw new PasswordException("Current password doesn't match.");
         }
         if(this.encodedPassword.equals(newPassword)){
-            throw new RuntimeException();
+            throw new PasswordException("New password can't be old password!");
         }
         this.encodedPassword = newPassword;
     }

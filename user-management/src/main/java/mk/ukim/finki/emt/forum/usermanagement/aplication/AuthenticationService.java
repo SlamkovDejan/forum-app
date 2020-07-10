@@ -3,6 +3,9 @@ package mk.ukim.finki.emt.forum.usermanagement.aplication;
 import mk.ukim.finki.emt.forum.sharedkernel.domain.user.Username;
 import mk.ukim.finki.emt.forum.usermanagement.aplication.dto.LoginDto;
 import mk.ukim.finki.emt.forum.usermanagement.aplication.dto.UserDto;
+import mk.ukim.finki.emt.forum.usermanagement.domain.exception.PasswordException;
+import mk.ukim.finki.emt.forum.usermanagement.domain.exception.RoleNotFoundException;
+import mk.ukim.finki.emt.forum.usermanagement.domain.exception.UserNotFoundException;
 import mk.ukim.finki.emt.forum.usermanagement.domain.model.Role;
 import mk.ukim.finki.emt.forum.usermanagement.domain.model.User;
 import mk.ukim.finki.emt.forum.usermanagement.domain.repository.RoleRepository;
@@ -35,12 +38,12 @@ public class AuthenticationService {
 
     public User login(@NonNull LoginDto loginDto){
         User user = userRepository.findUserByUsername(new Username(loginDto.getUsernameOrEmail()))
-                .orElse(userRepository.findUserByEmail(new Email(loginDto.getUsernameOrEmail())).orElseThrow(RuntimeException::new));
+                .orElse(userRepository.findUserByEmail(new Email(loginDto.getUsernameOrEmail())).orElseThrow(UserNotFoundException::new));
 
 
         EncodedPassword password = new EncodedPassword(passwordEncoder.encode(loginDto.getPassword()));
         if(!user.login(password)) {
-            throw new RuntimeException();
+            throw new PasswordException("Wrong password");
         }
 
         return user;
@@ -51,10 +54,10 @@ public class AuthenticationService {
         Username username = new Username(userDto.getUsername());
         Email email = new Email(userDto.getEmail());
         if(!EncodedPassword.validatePassword(userDto.getPassword())){
-            throw new RuntimeException();
+            throw new PasswordException("Invalid password");
         }
         EncodedPassword password = new EncodedPassword(passwordEncoder.encode(userDto.getPassword()));
-        Role role = roleRepository.findById(new RoleId(userDto.getRoleId())).orElseThrow(RuntimeException::new);
+        Role role = roleRepository.findById(new RoleId(userDto.getRoleId())).orElseThrow(RoleNotFoundException::new);
         User user = User.signUp(fullName, username, email, password, role);
 
         userRepository.save(user);
@@ -62,21 +65,21 @@ public class AuthenticationService {
     }
 
     public User changeFirstName(@NonNull UserId userId, @NonNull String name){
-        User user = userRepository.findById(userId).orElseThrow(RuntimeException::new);
+        User user = userRepository.findById(userId).orElseThrow(UserNotFoundException::new);
         user.changeFirstName(name);
         userRepository.save(user);
         return user;
     }
 
     public User changeLastName(@NonNull UserId userId, @NonNull String name){
-        User user = userRepository.findById(userId).orElseThrow(RuntimeException::new);
+        User user = userRepository.findById(userId).orElseThrow(UserNotFoundException::new);
         user.changeLastName(name);
         userRepository.save(user);
         return user;
     }
 
     public User changeEmail(@NonNull UserId userId, @NonNull String email){
-        User user = userRepository.findById(userId).orElseThrow(RuntimeException::new);
+        User user = userRepository.findById(userId).orElseThrow(UserNotFoundException::new);
         Email newEmail = new Email(email);
         user.changeEmail(newEmail);
         userRepository.save(user);
@@ -85,11 +88,11 @@ public class AuthenticationService {
 
     public User changePassword(@NonNull UserId userId, @NonNull String newPassword, @NonNull String oldPassword){
         if(!EncodedPassword.validatePassword(newPassword) || !EncodedPassword.validatePassword(oldPassword)){
-            throw new RuntimeException();
+            throw new PasswordException("Invalid password");
         }
         EncodedPassword newPw = new EncodedPassword(passwordEncoder.encode(newPassword));
         EncodedPassword oldPw = new EncodedPassword(passwordEncoder.encode(oldPassword));
-        User user = userRepository.findById(userId).orElseThrow(RuntimeException::new);
+        User user = userRepository.findById(userId).orElseThrow(UserNotFoundException::new);
         user.changePassword(newPw, oldPw);
         userRepository.save(user);
         return user;
