@@ -41,6 +41,8 @@ public class ForumService {
         this.subscriptionRepository = subscriptionRepository;
     }
 
+    //TODO: change who can create discussion
+
     private Subscription createSubscriptionOnForumDiscussion(Forum forum, UUID discussionId, UUID subscriberId){
         DiscussionId discussion = new DiscussionId(discussionId);
         UserId subscriber = new UserId(subscriberId);
@@ -53,8 +55,10 @@ public class ForumService {
     public Forum createForum(@NonNull ForumDTO forumDTO){
         Title forumTitle = new Title(forumDTO.getTitle());
         Description forumDescription = new Description(forumDTO.getDescription());
+        boolean autoSubscribeStudents = forumDTO.isAutoSubscribeStudents();
+        boolean canStudentsReply = forumDTO.isCanStudentsReply();
 
-        Forum newForum = new Forum(forumTitle, forumDescription);
+        Forum newForum = new Forum(forumTitle, forumDescription, autoSubscribeStudents, canStudentsReply);
         return forumRepository.save(newForum);
     }
 

@@ -30,13 +30,22 @@ public class Forum extends AbstractEntity<ForumId> {
     )
     private Set<Discussion> discussions;
 
+    @Column(name = "auto_subscribe_students", nullable = false)
+    private boolean autoSubscribeStudents;
+
+    @Column(name = "can_students_reply", nullable = false)
+    private boolean canStudentsReply;
+
     public Forum() {
     }
 
-    public Forum(@NonNull Title title, @NonNull Description description){
+    public Forum(@NonNull Title title, @NonNull Description description,
+                 @NonNull boolean autoSubscribeStudents, @NonNull boolean canStudentsReply){
         this.title = title;
         this.description = description;
         this.discussions = new TreeSet<>(Comparator.comparing(Discussion::getTimestampCreated).reversed());
+        this.autoSubscribeStudents = autoSubscribeStudents;
+        this.canStudentsReply = canStudentsReply;
     }
 
     private Discussion findDiscussionById(DiscussionId discussionId){
