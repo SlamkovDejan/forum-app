@@ -35,11 +35,10 @@ public class User extends AbstractEntity<UserId> {
     public User() {
     }
 
-    public User(@NonNull String firstName,@NonNull String lastName,@NonNull Username username,
+    public User(@NonNull FullName fullName,@NonNull Username username,
                 @NonNull Email email,@NonNull Password password,@NonNull Role role) {
 
-        this.firstName = firstName;
-        this.lastName = lastName;
+        this.fullName = fullName;
         this.username = username;
         this.email = email;
         this.password = password;
@@ -51,12 +50,12 @@ public class User extends AbstractEntity<UserId> {
     }
 
     public User changeFirstName(@NonNull String firstName){
-        this.firstName = firstName;
+        this.fullName = new FullName(firstName, this.fullName.getLastName());
         return this;
     }
 
-    public User changeLastName(@NonNull String firstName){
-        this.lastName = firstName;
+    public User changeLastName(@NonNull String lastName){
+        this.fullName = new FullName(this.fullName.getFirstName(), lastName);
         return this;
     }
 
@@ -65,10 +64,10 @@ public class User extends AbstractEntity<UserId> {
         return this;
     }
 
-    public static User signUp(@NonNull String firstName,@NonNull String lastName,@NonNull Username username,
+    public static User signUp(@NonNull FullName fullName,@NonNull Username username,
                               @NonNull Email email,@NonNull Password password,@NonNull Role role) {
 
-        return new User(firstName, lastName, username, email, password, role);
+        return new User(fullName, username, email, password, role);
     }
 
 }

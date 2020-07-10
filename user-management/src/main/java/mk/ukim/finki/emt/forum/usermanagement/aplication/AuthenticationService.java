@@ -7,6 +7,7 @@ import mk.ukim.finki.emt.forum.usermanagement.domain.model.Role;
 import mk.ukim.finki.emt.forum.usermanagement.domain.model.User;
 import mk.ukim.finki.emt.forum.usermanagement.domain.repository.UserRepository;
 import mk.ukim.finki.emt.forum.usermanagement.domain.value.Email;
+import mk.ukim.finki.emt.forum.usermanagement.domain.value.FullName;
 import mk.ukim.finki.emt.forum.usermanagement.domain.value.Password;
 import mk.ukim.finki.emt.forum.usermanagement.domain.value.UserId;
 import org.springframework.lang.NonNull;
@@ -41,14 +42,14 @@ public class AuthenticationService {
     }
 
     public User register(@NonNull UserDto userDto){
+        FullName fullName = new FullName(userDto.getFirstName(), userDto.getLastName());
         Username username = new Username(userDto.getUsername());
         Email email = new Email(userDto.getEmail());
         if(!Password.validatePassword(userDto.getPassword())){
             throw new RuntimeException();
         }
         Password password = new Password(passwordEncoder.encode(userDto.getPassword()));
-        User user = User.signUp(userDto.getFirstName(), userDto.getLastName(),
-                                username, email, password, new Role()); //TODO: discuss later
+        User user = User.signUp(fullName, username, email, password, new Role()); //TODO: discuss later
 
         userRepository.save(user);
         return user;
