@@ -24,7 +24,7 @@ public class UserController {
         this.userRepository = userRepository;
     }
 
-    @GetMapping("/{roleId}/ids")
+    @GetMapping("/role/{roleId}/ids")
     public List<UUID> findUserIdsByRole(@PathVariable("roleId") UUID roleId){
         List<User> usersWithRole = userRepository.findAllByRole_Id(new RoleId(roleId));
         return usersWithRole.stream()

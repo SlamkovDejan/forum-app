@@ -51,6 +51,7 @@ public class ForumService {
 
     // TODO: discuss method names: suffix Forum
     // TODO: discuss flush
+    // TODO: auto subscribe students to every new discussions
 
     public Forum createForum(@NonNull ForumDTO forumDTO){
         Title forumTitle = new Title(forumDTO.getTitle());
